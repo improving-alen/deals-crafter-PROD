@@ -1,0 +1,51 @@
+query CartInput {
+  cart {
+    lines {
+      id
+      cost {
+        subtotalAmount {
+          amount
+        }
+      }
+      quantity
+      isPreSaleProduct: attribute(key: "_presale_discount") {
+        value
+      }
+      crafterBundleName: attribute(key: "_deals_crafter_bundle_name"){
+        value
+      }
+      merchandise {
+        ... on ProductVariant {
+          id
+          product {
+            id
+            title
+            handle
+            productType
+            crafterBundleConfig: metafield(namespace: "custom", key: "bundle_crafter_config_single_unit_json") {
+              value
+            }
+            normalConfig: metafield(namespace: "custom", key: "normal_info_imp") {
+              value
+            }
+            tiersConfig: metafield(namespace: "custom", key: "tiers_configuration") {
+              value
+            }
+            discountsConfig: metafield(namespace: "custom", key: "product_discounts_configuration") {
+              value
+            }
+            presaleConfig: metafield(namespace: "custom",key: "presale_info_imp") {
+              value
+            }
+            presaleExtraTierConfig: metafield(namespace: "custom", key: "presale_extra_tier_configuration") {
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+  discount {
+    discountClasses
+  }
+}
