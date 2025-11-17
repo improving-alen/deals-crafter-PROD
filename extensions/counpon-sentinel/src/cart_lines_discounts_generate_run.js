@@ -5,7 +5,7 @@ const GLOBAL_CONFIG = {
     MODEL_CODES: ["_25i","_35i", "_45i", "_75i", "_flex"],
     DEFAULT_DISCOUNT_PREFIX: "[DC] - ",
     DEFAULT_BUNDLE_DISCOUNT_PREFIX: "Deals Crafter Code",
-    DEFAULT_NORMAL_DISCOUNT_PREFIX: "Promo Testing Discount",
+    DEFAULT_NORMAL_DISCOUNT_PREFIX: "Promo Discount",
     DEFAULT_PRE_SALE_PREFIX: "Pre-Sale Discount",
     DEFAULT_CRAFTER_ATTRIBUTE: "crafterBundle",
     IS_PRESALE_ENABLED: false,
@@ -244,11 +244,18 @@ function calculateDiscounts(lines, crafterBundles = [],configuration, totalQuant
                     originalDiscount = Number(applyableDiscounts[modelCode]);
                     discountToApply = Number(preSaleExtraTierConfig + originalDiscount);
 
-                    discountCopy = `${discountCopy} ${originalDiscount}% OFF + ${GLOBAL_CONFIG.DEFAULT_PRE_SALE_PREFIX} ${preSaleExtraTierConfig}% OFF`;
+                    if(discountType == 'percentage')
+                        discountCopy = `${discountCopy} ${originalDiscount}% OFF`;
+                    else
+                        discountCopy = `${discountCopy} $${originalDiscount} OFF`;
+
                 } else {
                     GLOBAL_CONFIG.DEFAULT_DISCOUNT_PREFIX = '[DC - NT] ';
                     discountToApply = Number(applyableDiscounts[modelCode]);
-                    discountCopy = `${GLOBAL_CONFIG.DEFAULT_BUNDLE_DISCOUNT_PREFIX} ${discountToApply}% OFF`;
+                    if(discountType == 'percentage')
+                        discountCopy = `${GLOBAL_CONFIG.DEFAULT_BUNDLE_DISCOUNT_PREFIX} ${discountToApply}% OFF`;
+                    else
+                        discountCopy = `${GLOBAL_CONFIG.DEFAULT_BUNDLE_DISCOUNT_PREFIX} $${discountToApply} OFF`;
                 }
             } else {
                 
@@ -262,7 +269,11 @@ function calculateDiscounts(lines, crafterBundles = [],configuration, totalQuant
                     discountType = discountConfig.discount_type;
                     discountToApply = Number(discountConfig.discount);
 
-                    discountCopy = `${GLOBAL_CONFIG.DEFAULT_PRE_SALE_PREFIX} ${discountToApply}% OFF`;
+                    if(discountType == 'percentage')
+                        discountCopy = `${GLOBAL_CONFIG.DEFAULT_PRE_SALE_PREFIX} ${discountToApply}% OFF`;
+                    else
+                        discountCopy = `${GLOBAL_CONFIG.DEFAULT_PRE_SALE_PREFIX} #${discountToApply} OFF`;
+
                 } else {
                     GLOBAL_CONFIG.DEFAULT_DISCOUNT_PREFIX = '[DC - ND] ';
                     discountConfig = applyableDiscounts.find(d => d.product === determineModelCode(product.title).replace('_',''));
