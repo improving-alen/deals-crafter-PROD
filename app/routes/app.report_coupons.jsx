@@ -126,7 +126,7 @@ export default function CouponReports() {
 
             // Create main orders sheet
             const ordersData = [
-                ['Order Name', 'Order Date', 'Coupons', 'Products', 'Total', 'Discounts', 'Revenue', 'Currency', 'Coupon Types']
+                ['Order Name', 'Order Date', 'Coupons', 'Total', 'Discounts', 'Revenue', 'Coupon Types','QTY','Products']
             ];
 
             uniqueOrders.forEach(order => {
@@ -144,16 +144,17 @@ export default function CouponReports() {
                     order.name,
                     new Date(order.createdAt).toLocaleDateString(),
                     couponsText,
-                    order.items.join('; '),
                     order.total,
                     order.discounts,
                     order.revenue,
-                    order.currency,
-                    couponTypes
+                    couponTypes,
+                    order.items.length,
+                    order.items.join('; ')
                 ]);
             });
 
             const ordersSheet = XLSX.utils.aoa_to_sheet(ordersData);
+            
             XLSX.utils.book_append_sheet(workbook, ordersSheet, 'All Orders');
 
             // Create coupon summary sheet
