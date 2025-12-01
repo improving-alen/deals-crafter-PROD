@@ -45,6 +45,12 @@ export const action = async ({ request }) => {
                     currencyCode
                   }
                 }
+                totalTaxSet {
+                    shopMoney {
+                      amount
+                      currencyCode
+                    }
+                }
                 discountApplications(first: 10) {
                   edges {
                     node {
@@ -123,7 +129,8 @@ export const action = async ({ request }) => {
 
           const total = parseFloat(edge.node.currentTotalPriceSet.shopMoney.amount);
           const discounts = parseFloat(edge.node.totalDiscountsSet.shopMoney.amount);
-          const revenue = total - discounts;
+          const taxes = parseFloat(edge.node.totalTaxSet.shopMoney.amount || 0);
+          const revenue = total - taxes;
 
           const items = edge.node.lineItems.edges.map(i => i.node.name);
 

@@ -272,7 +272,7 @@ function calculateDiscounts(lines, crafterBundles = [],configuration, totalQuant
                     if(discountType == 'percentage')
                         discountCopy = `${GLOBAL_CONFIG.DEFAULT_PRE_SALE_PREFIX} ${discountToApply}% OFF`;
                     else
-                        discountCopy = `${GLOBAL_CONFIG.DEFAULT_PRE_SALE_PREFIX} #${discountToApply} OFF`;
+                        discountCopy = `${GLOBAL_CONFIG.DEFAULT_PRE_SALE_PREFIX} $${discountToApply} OFF`;
 
                 } else {
                     GLOBAL_CONFIG.DEFAULT_DISCOUNT_PREFIX = '[DC - ND] ';
