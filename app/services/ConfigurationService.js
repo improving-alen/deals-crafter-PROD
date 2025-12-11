@@ -15,7 +15,8 @@ export class ConfigurationService {
       productsInfo,
       normalInfo,
       preSaleInfoState,
-      extraPreSaleDiscount
+      extraPreSaleDiscount,
+      isPreSaleEnabled
     } = configurations;
 
     console.log(">>> [ConfigurationService] Starting to save all configurations");
@@ -27,7 +28,8 @@ export class ConfigurationService {
         productsInfo,
         normalInfo,
         preSaleInfoState,
-        extraPreSaleDiscount
+        extraPreSaleDiscount,
+        isPreSaleEnabled
       });
 
       // 2. Save configurations to product metafields
@@ -36,7 +38,8 @@ export class ConfigurationService {
         productsInfo,
         normalInfo,
         preSaleInfoState,
-        extraPreSaleDiscount
+        extraPreSaleDiscount,
+        isPreSaleEnabled
       });
 
       console.log(">>> [ConfigurationService] All configurations saved successfully!");
@@ -55,7 +58,8 @@ export class ConfigurationService {
       productsInfo,
       normalInfo,
       preSaleInfoState,
-      extraPreSaleDiscount
+      extraPreSaleDiscount,
+      isPreSaleEnabled
     } = configurations;
 
     console.log(">>> [ConfigurationService] Saving configurations to metaobjects");
@@ -67,6 +71,20 @@ export class ConfigurationService {
       `extra-discount-${Date.now()}`,
       [{ key: "amount", value: extraPreSaleDiscount.toString() }]
     );
+
+    await this.metaobjectService.deleteMetaobjectsByType("is_pre_sale_enabled");
+    await this.metaobjectService.upsertMetaobject(
+        "is_pre_sale_enabled",
+        `is-pre-sale-enabled-${Date.now()}`,
+        [
+          { 
+            key: "ispresaleenabled", 
+            value: isPreSaleEnabled ? "true" : "false" 
+          }
+        ]
+      ); 
+
+    console.log(">>>>>> [ConfigurationService] IS PRE SALE ENABLED:", isPreSaleEnabled);
 
     // 2. Presale configuration
     await this.metaobjectService.deleteMetaobjectsByType("presale_info_imp");
@@ -137,7 +155,8 @@ export class ConfigurationService {
       productsInfo,
       normalInfo,
       preSaleInfoState,
-      extraPreSaleDiscount
+      extraPreSaleDiscount,
+      isPreSaleEnabled
     } = configurations;
 
     console.log(">>> [ConfigurationService] Saving configurations to product metafields");
@@ -158,7 +177,8 @@ export class ConfigurationService {
       "tiers_configuration",
       "product_discounts_configuration",
       "normal_info_imp",
-      "presale_info_imp"
+      "presale_info_imp",
+      "is_pre_sale_enabled"
     ];
 
     // Delete existing metafields
@@ -170,7 +190,8 @@ export class ConfigurationService {
       { key: "presale_info_imp", value: preSaleInfoState },
       { key: "presale_extra_tier_configuration", value: { amount: extraPreSaleDiscount } },
       { key: "tiers_configuration", value: tiersInfo },
-      { key: "product_discounts_configuration", value: productsInfo }
+      { key: "product_discounts_configuration", value: productsInfo },
+      { key: "is_pre_sale_enabled", value: isPreSaleEnabled }
     ];
 
     // Set new metafields
@@ -240,6 +261,14 @@ export class ConfigurationService {
         }
       );
 
+      // Load isPreSaleEnabled
+      configurations.isPreSaleEnabled = await this.metaobjectService.loadConfiguration(
+        "is_pre_sale_enabled",
+        {
+          isPreSaleEnabled: "isPreSaleEnabled"
+        }
+      );
+
       console.log(">>> [ConfigurationService] Successfully loaded all configurations");
       return configurations;
 
@@ -257,7 +286,8 @@ export class ConfigurationService {
       preSaleInfo: [],
       normalInfo: [],
       tiersInfo: [],
-      productsInfo: []
+      productsInfo: [],
+      isPreSaleEnabled: false
     };
   }
 }

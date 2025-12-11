@@ -18,6 +18,8 @@ import { json } from "@remix-run/node";
 import { useLoaderData, useFetcher } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 
+import VisualSwitch from "../components/VisualSwitch";
+
 const styles = `
   .centered-heading th {
     text-align: center !important;
@@ -66,12 +68,17 @@ const processMetaobjects = (metaobjectsData, fieldMappings) => {
 
 // Función para obtener un valor único de metaobject
 const getSingleMetaobjectValue = (metaobjectsData, fieldName) => {
+    //console.log(">>> DEBUG Single Metaobject Data:", metaobjectsData);
+    console.log(">>> DEBUG Single Metaobject Field Name:", fieldName);
   if (!metaobjectsData?.data?.metaobjects?.edges || metaobjectsData.data.metaobjects.edges.length === 0) {
     return null;
   }
 
   const fields = metaobjectsData.data.metaobjects.edges[0].node.fields;
   const field = fields.find(f => f.key === fieldName);
+
+  console.log(">>> DEBUG Single Metaobject Fields:", fields); // DEBUG
+  console.log(">>> DEBUG Single Metaobject Field:", field); // DEBUG
   return field ? field.value : null;
 };
 
@@ -97,7 +104,23 @@ export const loader = async ({ request }) => {
     const preSaleExtraDiscountResponse = await admin.graphql(preSaleExtraDiscountQuery);
     const preSaleExtraDiscountData = await preSaleExtraDiscountResponse.json();
 
-    console.log(">>> PreSaleExtraDiscountData: ", preSaleExtraDiscountData);
+    const isPreSaleConfigQuery = `
+      query {
+        metaobjects(type: "is_pre_sale_enabled", first: 10) {
+          edges {
+            node {
+              fields {
+                key
+                value
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const isPreSaleResponse = await admin.graphql(isPreSaleConfigQuery);
+    const isPreSaleData = await isPreSaleResponse.json();
 
     const preSaleConfigQuery = `
       query {
@@ -171,6 +194,8 @@ export const loader = async ({ request }) => {
     const productsResponse = await admin.graphql(productsQuery);
     const productsData = await productsResponse.json();
 
+    const isPreSaleEnabled = getSingleMetaobjectValue(isPreSaleData, "ispresaleenabled");
+
     // Procesar los datos de forma segura
     const preSaleExtraDiscountInfo = getSingleMetaobjectValue(preSaleExtraDiscountData, "amount") || "0";
 
@@ -202,11 +227,12 @@ export const loader = async ({ request }) => {
     });
 
     console.log(">>> Loaded data:", {
+      isPreSaleEnabled,
       preSaleExtraDiscountInfo,
       normalInfoLength: normalInfo.length,
       preSaleInfoLength: preSaleInfo.length,
       tiersInfoLength: tiersInfo.length,
-      productsInfoLength: productsInfo.length
+      productsInfoLength: productsInfo.length,
     });
 
     return json({ 
@@ -214,7 +240,8 @@ export const loader = async ({ request }) => {
       productsInfo, 
       normalInfo, 
       preSaleInfo, 
-      preSaleExtraDiscountInfo 
+      preSaleExtraDiscountInfo ,
+      isPreSaleEnabled
     });
 
   } catch (error) {
@@ -226,7 +253,8 @@ export const loader = async ({ request }) => {
       productsInfo: [],
       normalInfo: [],
       preSaleInfo: [],
-      preSaleExtraDiscountInfo: "0"
+      preSaleExtraDiscountInfo: "0",
+      isPreSaleEnabled: false
     });
   }
 };
@@ -291,13 +319,11 @@ export default function Index() {
         : defaultTiersInfo
     );
 
-    console.log(">>> Current states:", {
-      preSaleInfoState,
-      normalInfoState,
-      productsInfo,
-      tiersInfoState,
-      extraPreSaleDiscount
-    });
+    const [isPreSaleEnabled, setIsPreSaleEnabled] = useState(
+      () => loaderData.isPreSaleEnabled !== undefined 
+        ? loaderData.isPreSaleEnabled 
+        : false
+    );
 
     // Efecto para actualizar cuando cambian los datos del loader
     useEffect(() => {
@@ -321,6 +347,10 @@ export default function Index() {
 
       if (loaderData.productsInfo && loaderData.productsInfo.length > 0) {
         setProductsInfo(loaderData.productsInfo);
+      }
+
+      if (loaderData.isPreSaleEnabled !== undefined) {
+        setIsPreSaleEnabled(JSON.parse(loaderData.isPreSaleEnabled));
       }
     }, [loaderData]);
 
@@ -426,7 +456,8 @@ export default function Index() {
                 productsInfo: JSON.stringify(productsInfo),
                 normalInfo: JSON.stringify(normalInfoState),
                 preSaleInfoState: JSON.stringify(preSaleInfoState),
-                extraPreSaleDiscount: extraPreSaleDiscount.toString()
+                extraPreSaleDiscount: extraPreSaleDiscount.toString(),
+                isPreSaleEnabled: isPreSaleEnabled ? "true" : "false"
             },
             { method: "POST", action: "/app" }
         );
@@ -600,6 +631,20 @@ export default function Index() {
                                                 </div>
                                             ])
                                         }
+                                    />
+                                </BlockStack>
+                            </Card>
+                            <Card>
+                                <BlockStack gap="500">
+                                    <Text as="h2" variant="headingMd">
+                                        Pre-Sale State
+                                    </Text>
+                                    <VisualSwitch
+                                        checked={isPreSaleEnabled}
+                                        onChange={(newValue) => {
+                                            console.log(">>> Toggle Pre-Sale Enabled:", newValue);
+                                            setIsPreSaleEnabled(newValue);
+                                        }}
                                     />
                                 </BlockStack>
                             </Card>

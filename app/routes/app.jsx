@@ -5,30 +5,34 @@ import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { NavMenu } from "@shopify/app-bridge-react";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 import { authenticate } from "../shopify.server";
-import { ConfigurationService } from "../services/ConfigurationService.js";
+
+import { UnifiedConfigurationService } from "../services/UnifiedConfigurationService.js";
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
-  
+
   try {
-    const configService = new ConfigurationService(admin);
+    const configService = new UnifiedConfigurationService(admin);
     const configurations = await configService.loadAllConfigurations();
-    
-    return json({ 
+
+    return json({
       apiKey: process.env.SHOPIFY_API_KEY || "",
       ...configurations
     });
   } catch (error) {
-    console.error('Error in loader:', error);
-    return json({ 
+    console.error("Error in loader:", error);
+
+    return json({
       apiKey: process.env.SHOPIFY_API_KEY || "",
       preSaleExtraDiscountInfo: "0",
       preSaleInfo: [],
       normalInfo: [],
       tiersInfo: [],
-      productsInfo: []
+      productsInfo: [],
+      isPreSaleEnabled: false,
+      prismaCopy: {}
     });
   }
 };
@@ -36,22 +40,25 @@ export const loader = async ({ request }) => {
 export const action = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   const formData = await request.formData();
-  
+
+  console.log(">>> IS PRE SALE ENABLED:", formData.get("isPreSaleEnabled"));
+
   const configurations = {
     tiersInfo: JSON.parse(formData.get("tiersInfo")),
     productsInfo: JSON.parse(formData.get("productsInfo")),
     normalInfo: JSON.parse(formData.get("normalInfo")),
     preSaleInfoState: JSON.parse(formData.get("preSaleInfoState")),
-    extraPreSaleDiscount: formData.get("extraPreSaleDiscount")
+    extraPreSaleDiscount: formData.get("extraPreSaleDiscount"),
+    isPreSaleEnabled: formData.get("isPreSaleEnabled") === "true"
   };
 
   try {
-    const configService = new ConfigurationService(admin);
+    const configService = new UnifiedConfigurationService(admin);
     const result = await configService.saveAllConfigurations(configurations);
-    
+
     return json(result);
   } catch (error) {
-    console.error('Error in action:', error);
+    console.error("Error in action:", error);
     return json({
       success: false,
       message: "An unexpected error occurred during configuration save."

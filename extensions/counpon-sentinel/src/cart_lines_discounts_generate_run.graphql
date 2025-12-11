@@ -37,7 +37,10 @@ query CartInput {
             presaleConfig: metafield(namespace: "custom",key: "presale_info_imp") {
               value
             }
-            presaleExtraTierConfig: metafield(namespace: "custom", key: "presale_extra_tier_configuration") {
+            #presaleExtraTierConfig: metafield(namespace: "custom", key: "presale_extra_tier_configuration") {
+            #  value
+            #},
+            isGlobalPreSaleEnabled: metafield(namespace: "custom", key: "is_pre_sale_enabled") {
               value
             }
           }

@@ -98,6 +98,11 @@ export class MetaObjectService{
       }
     `;
 
+    fields = fields.map(f => ({
+        key: f.key,
+        value: typeof f.value === "boolean" ? (f.value ? "true" : "false") : f.value
+    }));
+
     const variables = {
       handle: {
         type: type,

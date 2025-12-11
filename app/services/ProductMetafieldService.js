@@ -192,13 +192,19 @@ export class ProductMetafieldService {
 
       console.log(`>>> [ProductMetafieldService] Processing product ${i + 1} of ${products.length}: ${product.id}`);
 
-      const metafieldsInput = metafieldsConfig.map(config => ({
-        namespace: "custom",
-        key: config.key,
-        ownerId: product.id,
-        type: "json",
-        value: JSON.stringify(config.value)
-      }));
+        const metafieldsInput = metafieldsConfig.map(config => {
+            const isBooleanField = config.key === "is_pre_sale_enabled";
+            
+            return {
+                namespace: "custom",
+                key: config.key,
+                ownerId: product.id,
+                type: isBooleanField ? "boolean" : "json",
+                value: isBooleanField
+                ? (config.value === true || config.value === "true" ? "true" : "false")
+                : JSON.stringify(config.value)
+            };
+        });
 
       try {
         const result = await this.executeGraphQL(mutation, { metafields: metafieldsInput });
