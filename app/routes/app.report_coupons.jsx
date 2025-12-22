@@ -1,15 +1,15 @@
 // app/routes/app.report_coupons.jsx
 import { useState } from "react";
 import {
-  Page,
-  Card,
-  Text,
-  Badge,
-  TextField,
-  Button,
-  BlockStack,
-  Spinner,
-  InlineStack,
+    Page,
+    Card,
+    Text,
+    Badge,
+    TextField,
+    Button,
+    BlockStack,
+    Spinner,
+    InlineStack,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 
@@ -68,14 +68,12 @@ export default function CouponReports() {
             });
 
             const data = await res.json();
-            console.log(">>> API RESPONSE:", data);
 
             if (data.error) {
                 setError(data.error);
                 setOrders([]);
             } else {
                 const filteredOrders = data.orders;
-                console.log(">>> FILTERED ORDERS:", filteredOrders);
 
                 if (filteredOrders.length === 0) {
                     setError("No orders found for the selected date range.");
@@ -126,7 +124,7 @@ export default function CouponReports() {
 
             // Create main orders sheet
             const ordersData = [
-                ['Order Name', 'Order Date', 'Coupons', 'Total', 'Discounts', 'Revenue', 'Coupon Types','QTY','Products']
+                ['Order Name', 'Order Date', 'Coupons', 'Total', 'Discounts', 'Revenue', 'Coupon Types','QTY','Products','BundleNames']
             ];
 
             uniqueOrders.forEach(order => {
@@ -149,12 +147,12 @@ export default function CouponReports() {
                     order.revenue,
                     couponTypes,
                     order.items.length,
-                    order.items.join('; ')
+                    order.items.map(i => `${i.quantity} - ${i.name}`).join('; '),
+                    order.bundleName
                 ]);
             });
 
             const ordersSheet = XLSX.utils.aoa_to_sheet(ordersData);
-            
             XLSX.utils.book_append_sheet(workbook, ordersSheet, 'All Orders');
 
             // Create coupon summary sheet
@@ -328,6 +326,7 @@ export default function CouponReports() {
                                 <th style={{ padding: "12px", textAlign: "right", fontWeight: "bold" }}>Revenue</th>
                                 <th style={{ padding: "12px", textAlign: "left", fontWeight: "bold" }}>Date</th>
                                 <th style={{ padding: "12px", textAlign: "left", fontWeight: "bold" }}>Products</th>
+                                <th style={{ padding: "12px", textAlign: "left", fontWeight: "bold" }}>BundleName</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -372,7 +371,17 @@ export default function CouponReports() {
                                         <td style={{ padding: "12px", verticalAlign: "top" }}>
                                             <div style={{ maxWidth: "200px" }}>
                                                 <Text variant="bodyMd">
-                                                {order.items.join(", ")}
+                                                    {order.items
+                                                        .map(i => `${i.quantity} - ${i.name}`)
+                                                        .join(", ")
+                                                    }
+                                                </Text>
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: "12px", verticalAlign: "top" }}>
+                                            <div style={{ maxWidth: "200px" }}>
+                                                <Text variant="bodyMd">
+                                                    {order.bundleName}
                                                 </Text>
                                             </div>
                                         </td>
